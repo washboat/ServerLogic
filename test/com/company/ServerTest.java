@@ -28,21 +28,4 @@ class ServerTest {
     void listen() {
         server.listen();
     }
-
-    @Test
-    void readMetaData() {
-        try {
-            server.readMetaData();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    void createFile() {
-    }
-
-    @Test
-    void processIO() {
-    }
 }
