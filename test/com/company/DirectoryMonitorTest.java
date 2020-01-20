@@ -30,7 +30,7 @@ class DirectoryMonitorTest {
     void processEvents() {
         Path dir = Paths.get("C:\\Users\\trist\\Documents\\TestFiles");
         try {
-            new DirectoryMonitor(dir, false, "192.168.1.76", 32581 ).processEvents();
+            new DirectoryMonitor(dir, true, "10.19.10.6", 32581 ).processEvents();
         } catch (IOException e) {
             e.printStackTrace();
         }

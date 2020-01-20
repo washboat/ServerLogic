@@ -1,6 +1,11 @@
 package com.company;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 
 public class ClientHandler extends Thread{
@@ -10,31 +15,19 @@ public class ClientHandler extends Thread{
 
     private String fileName = null;
     private long fileSize;
-    //private OutputStream localFileOutput = null;
     private byte[] buffer = new byte[4096];
 
 
-    public ClientHandler( Socket socket, DataInputStream inputStream, DataOutputStream outputStream){
-        this.inputStream = inputStream;
-        this.outputStream = outputStream;
-        this.socket = socket;
+    public ClientHandler( Socket socket, File repository){
+        try {
+            this.inputStream = new DataInputStream(socket.getInputStream());
+            this.outputStream = new DataOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         readMetaData();
-//        OutputStream localFileOutput = createFile();
-        processIO();
+        processIO(repository);
     }
-
-    /*
-    This method creates a local file and opens an output stream to write to the file
-     */
-//    public OutputStream createFile() {
-//        File file = new File("C:\\Users\\trist\\Documents\\" + fileName);
-//        try {
-//            localFileOutput = new FileOutputStream(file);
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//        return localFileOutput;
-//    }
 
     /*
     This method reads the file name from the client as String using readUTF and the file size as long using readLong
@@ -53,7 +46,7 @@ public class ClientHandler extends Thread{
     Continues this process until the socket reaches end of stream and the total size of the local file is the expected size.
 
      */
-    public void processIO() {
+    public void processIO(File repository) {
         /*
         conditioning the loop to continue until end of stream (EOS) may have unintended errors.
         For example if the client sends some of the file now and the rest later the server may end the loop prematurely,
@@ -63,7 +56,7 @@ public class ClientHandler extends Thread{
         assuming the API class doesn't already have that feature.
         */
         int bytesRead = -1;
-        File file = new File("C:\\Users\\trist\\Documents\\" + fileName);
+        File file = new File(repository.toString()+ "//" + fileName);
         try (OutputStream localFileOutput = new FileOutputStream(file)){
             while (true) {
                 if (!(fileSize > 0 && (bytesRead = inputStream.read(buffer, 0, (int) Math.min(buffer.length, fileSize))) != -1))

@@ -1,5 +1,6 @@
 package com.company;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -9,7 +10,7 @@ import java.util.Map;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.nio.file.StandardWatchEventKinds.*;
 
-public class DirectoryMonitor{
+public class DirectoryMonitor extends SwingWorker {
     private WatchService watcher = null;
     private Map<WatchKey, Path> keys = null;
     private boolean recursive = false;
@@ -85,7 +86,6 @@ public class DirectoryMonitor{
                     WatchEvent.Kind kindOfEvent = event.kind();
 
                     if (kindOfEvent == OVERFLOW){
-                        //ignore overflow
                         //TODO: consider if overflow needs to be handled
                         continue;
                     }
@@ -97,8 +97,14 @@ public class DirectoryMonitor{
 
                     if ( kindOfEvent == ENTRY_CREATE){
                         if (Files.isRegularFile(child, NOFOLLOW_LINKS)){
-                            Thread thread = new Client(getIp(), getPort(), child);
-                            thread.start();
+                            String contentType = Files.probeContentType(child);
+                            String mediaType = contentType.split("/", 2)[0];
+                            if ("video".equalsIgnoreCase(mediaType)){
+                                Thread thread = new Client(getIp(), getPort(), child);
+                                thread.start();
+                            }
+                            else
+                                System.err.format("Expected \'%s\' to be a video, but found a \'%s\' instead \n", child, mediaType);
                         }
                     }
                     if (recursive && (kindOfEvent == ENTRY_CREATE)) {
@@ -107,7 +113,7 @@ public class DirectoryMonitor{
                                 registerAll(child);
                             }
                         } catch (IOException x) {
-                            // ignore to keep sample readbale
+
                         }
 
                     }
@@ -123,11 +129,12 @@ public class DirectoryMonitor{
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-
     }
 
+    //for testing
     public static void main(String[] args) {
         Path dir = Paths.get("C:\\Users\\trist\\Documents\\TestFiles");
         try {
@@ -161,5 +168,16 @@ public class DirectoryMonitor{
             return true;
         }
         return false;
+    }
+
+    @Override
+    protected Object doInBackground() throws Exception {
+        processEvents();
+        return null;
+    }
+
+    @Override
+    protected void done() {
+        super.done();
     }
 }

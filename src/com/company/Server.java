@@ -1,10 +1,10 @@
 package com.company;
 
-import java.io.*;
-import java.net.InetAddress;
+import javax.swing.SwingWorker;
+import java.io.File;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 /*
     The Server class consists of methods which handle the connection and communication with a remote client.
@@ -17,32 +17,68 @@ import java.net.UnknownHostException;
     Currently the server handles one client and terminates. Add multi threading later
 
  */
-public class Server {
-    //unused for now
-    private String ip = null;
-    private int port;
-    private ServerSocket serverSocket = null;
-
-    public Server(int port) throws IOException {
-        this.ip = InetAddress.getLocalHost().toString();
-        this.port = port;
-        serverSocket = new ServerSocket(port);
+public class Server extends SwingWorker {
+    private ServerSocket serverSocket;
+    private File repository;
+    private volatile boolean serverState;
+    public Server(int port, File repository) throws IOException {
+        setServerState(false);
+        setServerSocket(new ServerSocket(port));
+        setRepository(repository);
     }
 
-    //This method waits until a client connects and then processes the incoming data
-    //ToDo: spawn a thread that handles each client separately and move the I/O processing to those threads
-    public void listen(){
-        while(true) {
+    @Override
+    protected Object doInBackground() throws Exception {
+        serverState = true;
+        System.out.format("Listening on port %s...\n", serverSocket.getLocalPort());
+        while(isServerState()) {
             try {
-                //streams connected to the remote client
+                ServerSocket serverSocket = getServerSocket();
+                File repository = getRepository();
                 Socket socket = serverSocket.accept();
-                DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-                DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-                Thread thread = new ClientHandler(socket, dataInputStream, dataOutputStream);
+                Thread thread = new ClientHandler(socket, repository);
                 thread.start();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Socket Closed");
             }
         }
+        serverSocket.close();
+        System.out.println("Server stopped...");
+        return null;
+    }
+
+    @Override
+    protected void done() {
+        System.out.println("Server shutting down...");
+        try {
+            getServerSocket().close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        setServerState(false);
+    }
+
+    public ServerSocket getServerSocket() {
+        return serverSocket;
+    }
+
+    public void setServerSocket(ServerSocket serverSocket) {
+        this.serverSocket = serverSocket;
+    }
+
+    public boolean isServerState() {
+        return serverState;
+    }
+
+    public void setServerState(boolean serverState) {
+        this.serverState = serverState;
+    }
+
+    public void setRepository(File repository) {
+        this.repository = repository;
+    }
+
+    public File getRepository(){
+        return repository;
     }
 }

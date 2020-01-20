@@ -16,10 +16,6 @@ import java.nio.file.Path;
 
 //FIXME:
 // Benchmark performance of different buffer sizes
-// Guard against IOExceptions before attemting to access local files
-// Implement ability for client to send multiple files
-// Actually handle exceptions
-// Add exception comments to documentation
 public class Client extends Thread{
 
     //buffer used to avoid reading entire files into memory at once. size of 4096 is set to match the block size of the NTFS
