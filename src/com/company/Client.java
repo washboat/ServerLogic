@@ -1,8 +1,9 @@
 package com.company;
 
 import java.io.*;
-import java.net.Socket;
+import java.net.*;
 import java.nio.file.Path;
+import java.util.*;
 
 /*
     The client class consists of methods which handle the connection and communication with a remote server.
@@ -55,5 +56,18 @@ public class Client extends Thread{
             outputStream.flush();
             fileLength -= bytesWritten;
         }
+    }
+
+    public static List<InetAddress> pingNetwork(String networkID) throws IOException {
+        //254 is reserved for modem
+        List<InetAddress> addressList = new ArrayList<InetAddress>();
+        for (int i = 1; i < 254; i++){
+            String ip = networkID + "." + i;
+            InetAddress address = InetAddress.getByName(ip);
+            if (address.isReachable(250))
+                addressList.add(address);
+            System.out.println(i);
+        }
+        return addressList;
     }
 }

@@ -29,12 +29,17 @@ public class ClientWindow {
     private JButton pathButton;
     private JButton startButton;
 
+    SwingWorker worker;
+
+
     public ClientWindow(JFrame parentFrame){
         frame = new JFrame("ClientWindow");
         frame.setSize(500,500);
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                if (worker != null)
+                    worker.cancel(true);
                 parentFrame.setVisible(true);
                 frame.dispose();
                 //super.windowClosing(e);
@@ -85,7 +90,7 @@ public class ClientWindow {
         String ip = ipTextField.getText();
         Path path = pathToMonitor.toPath();
         try {
-            SwingWorker worker = new DirectoryMonitor(path, true, ip, port);
+            worker = new DirectoryMonitor(path, true, ip, port);
             worker.execute();
         } catch (IOException ex) {
             ex.printStackTrace();
